@@ -11,6 +11,7 @@ from absl.flags import FLAGS
 import core.utils as utils
 from core.yolov4 import filter_boxes
 from tensorflow.python.saved_model import tag_constants
+from functions import *
 from core.config import cfg
 from PIL import Image
 import cv2
@@ -37,6 +38,7 @@ flags.DEFINE_float('score', 0.50, 'score threshold')
 flags.DEFINE_boolean('dont_show', False, 'dont show video output')
 flags.DEFINE_boolean('info', False, 'show detailed info of tracked objects')
 flags.DEFINE_boolean('count', False, 'count objects being tracked on screen')
+flags.DEFINE_boolean('speed', True, 'calculate speed of detected objects')
 
 def main(_argv):
     # Definition of the parameters
@@ -202,6 +204,8 @@ def main(_argv):
 
         # update tracks
         for track in tracker.tracks:
+            speed = 0
+            totalSpeed = 0
             if not track.is_confirmed() or track.time_since_update > 1:
                 continue 
             bbox = track.to_tlbr()
@@ -217,7 +221,11 @@ def main(_argv):
         # if enable info flag then print details about each track
             if FLAGS.info:
                 print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
-
+        # if flag == speed then print speed of each track
+            if FLAGS.speed:
+                speed = getSpeed(class_names[class_indx])
+                totalSpeed += speed
+                 cv2.putText(frame, speed + "-" + int(speed),(int(bbox[0]), int(bbox[1]-10)),0, 0.75, (255,255,255),2)
         # calculate frames per second of running detections
         fps = 1.0 / (time.time() - start_time)
         print("FPS: %.2f" % fps)
