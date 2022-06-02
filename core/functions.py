@@ -34,3 +34,13 @@ def count_objects(data, by_class = False,
         counts['total object'] = num_objects
     
     return counts
+
+def getSpeed(pointList):
+    dx = 0
+    dy = 0
+    for x in range(len(pointList)-1):
+        dx += pointList[bbox[0]+1][0] - pointList[bbox[0]][0]  
+        dy += pointList[bbox[0]+1][1] - pointList[bbox[0]][1] 
+    speed = math.sqrt(abs(dx * dx - dy * dy))
+    return round(speed / 100)
+   
