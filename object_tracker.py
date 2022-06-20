@@ -3,6 +3,8 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import time
 import tensorflow as tf
+import math
+import pandas as pd
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 if len(physical_devices) > 0:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -201,15 +203,117 @@ def main(_argv):
         # Call the tracker
         tracker.predict()
         tracker.update(detections)
+        
+        angle_factor = 0.8
+
+
+        def dist(c1, c2):
+          return ((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) ** 0.5
+
+
+        def T2S(T):
+          S = abs(T/((1+T**2)**0.5))
+          return S
+
+
+        def T2C(T):
+          C = abs(1/((1+T**2)**0.5))
+          return C
+
+
+        def isclose(p1,p2):
+          c_d = dist(p1[2], p2[2])
+          if(p1[1]<p2[1]):
+            a_w = p1[0]
+            a_h = p1[1]
+          else:
+            a_w = p2[0]
+            a_h = p2[1]
+          T = 0
+          try:
+            T=(p2[2][1]-p1[2][1])/(p2[2][0]-p1[2][0])
+          except ZeroDivisionError:
+            T = 1.633123935319537e+16
+          S = T2S(T)
+          C = T2C(T)
+          d_hor = C*c_d
+          d_ver = S*c_d
+          vc_calib_hor = a_w*1.3
+          vc_calib_ver = a_h*0.4*angle_factor
+          c_calib_hor = a_w * 1.7
+          c_calib_ver = a_h*0.2*angle_factor
+          # print(p1[2], p2[2],(vc_calib_hor,d_hor),(vc_calib_ver,d_ver))
+          if 0 < d_hor < vc_calib_hor and 0 < d_ver < vc_calib_ver:
+            return 1
+          elif 0 < d_hor < c_calib_hor and 0 < d_ver < c_calib_ver:
+            return 2
+          else:
+            return 0
+
+         if len(detections) > 0:
+            status = []
+            close_pair = []
+            s_close_pair = []
+            center = []
+            co_info = []
+            distance_from_cam = []
+            speed_list = []
+            mallwalks = []
+            count = 0
+            speed = 0
+            totalSpeed = 0
 
         # update tracks
         for track in tracker.tracks:
-            speed = 0
-            totalSpeed = 0
             if not track.is_confirmed() or track.time_since_update > 1:
                 continue 
             bbox = track.to_tlbr()
             class_name = track.get_class()
+            (x, y) = (bbox[0], bbox[1])
+            (w, h) = (bbox[2], bbox[3])
+            cen = [round(int(bbox[0]+bbox[2])/2),round(int(bbox[1]+bbox[3])/2)]
+            colour = (0,255,0)
+            cv2.circle(frame, tuple(cen), 5, colour, 5)
+            center.append(cen)
+            co_info.append([w, h, cen])
+            status.append(0)
+            
+            for i in range(len(center)):
+               for j in range(len(center)):
+                   g = isclose(co_info[i], co_info[j])
+                   if g == 1:
+                     close_pair.append([center[i], center[j]])
+                     status[i] = 1
+                     status[j] = 1
+                   elif g == 2:
+                     s_close_pair.append([center[i], center[j]])
+                   if status[i] != 1:
+                     status[i] = 2
+                   if status[j] != 1:
+                     status[j] = 2
+            
+            # function to calculate speed
+            def getSpeed(pointList):
+                dx = 0
+                dy = 0
+
+                for x in range(len(pointList)-1):
+                   dx += pointList[x+1][0] - pointList[x][0]
+                   dy += pointList[x+1][1] - pointList[x][1]
+                speed = math.sqrt(abs(dx * dx - dy * dy))
+
+                return round(speed / 100)
+
+
+            speed = getSpeed(center)
+            totalSpeed += speed
+            
+            if class_name == 'bicycle':
+                distance = (2*31.4*180)/(bbox[2]+bbox[3])*10
+                dist_metres = distance / 100
+                cv2.putText(frame, "distance: " + str(dist_metres), (int(bbox[0]), int(bbox[1] - 90)), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                (255, 255, 255), 3)
+                distance_from_cam.append(dist_metres)
             
         # draw bbox on screen
             color = colors[int(track.track_id) % len(colors)]
@@ -221,11 +325,11 @@ def main(_argv):
         # if enable info flag then print details about each track
             if FLAGS.info:
                 print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
-        # if flag == speed then print speed of each track
-            if FLAGS.speed:
-                speed = getSpeed(class_names[class_indx])
-                totalSpeed += speed
-                 cv2.putText(frame, speed + "-" + int(speed),(int(bbox[0]), int(bbox[1]-10)),0, 0.75, (255,255,255),2)
+            for h in close_pair:
+                cv2.line(frame, tuple(h[0]), tuple(h[1]), (0, 0, 255), 2)
+            for b in s_close_pair:
+                cv2.line(frame, tuple(b[0]), tuple(b[1]), (0, 255, 255), 2)
+#                 cv2.putText(frame, speed + "-" + int(speed),(int(bbox[0]), int(bbox[1]-10)),0, 0.75, (255,255,255),2)
         # calculate frames per second of running detections
         fps = 1.0 / (time.time() - start_time)
         print("FPS: %.2f" % fps)
