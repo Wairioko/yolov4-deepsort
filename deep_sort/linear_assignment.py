@@ -7,6 +7,16 @@ from . import kalman_filter
 
 INFTY_COST = 1e+5
 
+# Define aliases for deprecated data types
+np.bool = np.bool_
+np.int = np.int_
+np.float = np.float_
+np.complex = np.complex_
+np.object = np.object_
+np.str = np.str_
+np.unicode = np.unicode_
+np.long = np.int_
+
 
 def min_cost_matching(
         distance_metric, max_distance, tracks, detections, track_indices=None,
