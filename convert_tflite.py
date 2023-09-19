@@ -7,6 +7,15 @@ from core.yolov4 import YOLOv4, YOLOv3, YOLOv3_tiny, decode
 import core.utils as utils
 import os
 from core.config import cfg
+# Define aliases for deprecated data types
+np.bool = np.bool_
+np.int = np.int_
+np.float = np.float_
+np.complex = np.complex_
+np.object = np.object_
+np.str = np.str_
+np.unicode = np.unicode_
+np.long = np.int_
 
 flags.DEFINE_string('weights', './checkpoints/yolov4-416', 'path to weights file')
 flags.DEFINE_string('output', './checkpoints/yolov4-416-fp32.tflite', 'path to output')
