@@ -2,7 +2,15 @@
 from __future__ import absolute_import
 import numpy as np
 from . import linear_assignment
-
+# Define aliases for deprecated data types
+np.bool = np.bool_
+np.int = np.int_
+np.float = np.float_
+np.complex = np.complex_
+np.object = np.object_
+np.str = np.str_
+np.unicode = np.unicode_
+np.long = np.int_
 
 def iou(bbox, candidates):
     """Computer intersection over union.
