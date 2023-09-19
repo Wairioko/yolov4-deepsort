@@ -1,6 +1,14 @@
 # vim: expandtab:ts=4:sw=4
 import numpy as np
-
+# Define aliases for deprecated data types
+np.bool = np.bool_
+np.int = np.int_
+np.float = np.float_
+np.complex = np.complex_
+np.object = np.object_
+np.str = np.str_
+np.unicode = np.unicode_
+np.long = np.int_
 
 def _pdist(a, b):
     """Compute pair-wise squared distance between points in `a` and `b`.
