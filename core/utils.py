@@ -5,6 +5,15 @@ import numpy as np
 import tensorflow as tf
 from core.config import cfg
 
+# Define aliases for deprecated data types
+np.bool = np.bool_
+np.int = np.int_
+np.float = np.float_
+np.complex = np.complex_
+np.object = np.object_
+np.str = np.str_
+np.unicode = np.unicode_
+np.long = np.int_
 def load_freeze_layer(model='yolov4', tiny=False):
     if tiny:
         if model == 'yolov3':
