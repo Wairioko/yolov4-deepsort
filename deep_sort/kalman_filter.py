@@ -2,6 +2,15 @@
 import numpy as np
 import scipy.linalg
 
+# Define aliases for deprecated data types
+np.bool = np.bool_
+np.int = np.int_
+np.float = np.float_
+np.complex = np.complex_
+np.object = np.object_
+np.str = np.str_
+np.unicode = np.unicode_
+np.long = np.int_
 
 """
 Table for the 0.95 quantile of the chi-square distribution with N degrees of
