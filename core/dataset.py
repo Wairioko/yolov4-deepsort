@@ -8,7 +8,15 @@ import numpy as np
 import tensorflow as tf
 import core.utils as utils
 from core.config import cfg
-
+# Define aliases for deprecated data types
+np.bool = np.bool_
+np.int = np.int_
+np.float = np.float_
+np.complex = np.complex_
+np.object = np.object_
+np.str = np.str_
+np.unicode = np.unicode_
+np.long = np.int_
 
 class Dataset(object):
     """implement Dataset here"""
@@ -79,7 +87,7 @@ class Dataset(object):
 
     def __iter__(self):
         return self
-
+        
     def __next__(self):
         with tf.device("/cpu:0"):
             # self.train_input_size = random.choice(self.train_input_sizes)
